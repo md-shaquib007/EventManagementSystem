@@ -35,7 +35,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
 
-    @Value("${ceoms.cors.allowed-origins}")
+    @Value("${ceoms.cors.allowed-origins:http://localhost:5173,http://localhost:3000,https://*.vercel.app}")
     private String allowedOrigins;
 
     @Bean
