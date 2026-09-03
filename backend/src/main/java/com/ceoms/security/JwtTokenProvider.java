@@ -23,8 +23,12 @@ public class JwtTokenProvider {
             @Value("${ceoms.jwt.secret}") String secret,
             @Value("${ceoms.jwt.access-token-expiration}") long accessTokenExpiration,
             @Value("${ceoms.jwt.refresh-token-expiration}") long refreshTokenExpiration) {
-        byte[] keyBytes = Decoders.BASE64.decode(
-                java.util.Base64.getEncoder().encodeToString(secret.getBytes()));
+        byte[] keyBytes = secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            byte[] padded = new byte[32];
+            System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
+            keyBytes = padded;
+        }
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;

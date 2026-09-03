@@ -220,7 +220,8 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<EventResponse> search(String query) {
-        return eventRepository.search(query).stream().map(eventMapper::toResponse).toList();
+        if (query == null || query.isBlank()) return List.of();
+        return eventRepository.search(query).stream().limit(50).map(eventMapper::toResponse).toList();
     }
 
     private Event findEvent(Long id) {

@@ -30,7 +30,8 @@ api.interceptors.response.use(
             return api(original);
           }
         } catch {
-          localStorage.clear();
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           window.location.href = '/login';
         }
       }
