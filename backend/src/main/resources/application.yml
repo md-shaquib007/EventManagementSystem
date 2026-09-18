@@ -20,21 +20,21 @@ spring:
     type: simple
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${serverPort:${SERVER_PORT:8080}}
   servlet:
     context-path: /api/v1
 
 ceoms:
   jwt:
-    secret: ${JWT_SECRET:ceoms-super-secret-key-change-in-production-must-be-at-least-256-bits-long!!}
-    access-token-expiration: ${JWT_ACCESS_EXPIRATION:900000}
-    refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+    secret: ${jwtSecret:${JWT_SECRET:ceoms-super-secret-key-change-in-production-must-be-at-least-256-bits-long!!}}
+    access-token-expiration: ${jwtAccessExpiration:${JWT_ACCESS_EXPIRATION:900000}}
+    refresh-token-expiration: ${jwtRefreshExpiration:${JWT_REFRESH_EXPIRATION:604800000}}
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+    allowed-origins: ${corsOrigins:${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}}
   upload:
-    dir: ${UPLOAD_DIR:./uploads}
+    dir: ${uploadDir:${UPLOAD_DIR:./uploads}}
   frontend:
-    url: ${FRONTEND_URL:http://localhost:5173}
+    url: ${frontendUrl:${FRONTEND_URL:http://localhost:5173}}
 
 springdoc:
   api-docs:

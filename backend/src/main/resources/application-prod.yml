@@ -1,17 +1,17 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${dbUrl:${neonDbUrl:${JDBC_URL:${DB_URL:jdbc:postgresql://${dbHost:${DB_HOST:localhost}}:${dbPort:${DB_PORT:5432}}/${dbName:${DB_NAME:ceoms}}}}}}
+    username: ${dbUsername:${DB_USERNAME:${DB_USER:postgres}}}
+    password: ${dbPassword:${DB_PASSWORD:${DB_PASS:postgres}}}
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: false
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: ${mailHost:${MAIL_HOST:localhost}}
+    port: ${mailPort:${MAIL_PORT:587}}
+    username: ${mailUsername:${MAIL_USERNAME:}}
+    password: ${mailPassword:${MAIL_PASSWORD:}}
     properties:
       mail:
         smtp:
