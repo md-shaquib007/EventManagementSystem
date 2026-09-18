@@ -1,0 +1,7 @@
+# Copy to db.properties for local use, or set dbUrl in the deployment environment.
+# Never commit real production credentials.
+dbUrl=jdbc:postgresql://localhost:5432/ceoms
+dbUsername=postgres
+dbPassword=your_password
+uploadDir=./uploads
+jwtSecret=ceoms-super-secret-key-change-in-production-must-be-at-least-256-bits-long!!
