@@ -33,29 +33,43 @@ public class FileStorageService {
     }
 
     public String storeFile(MultipartFile file, String subDir) {
+        String cleanSubDir = StringUtils.cleanPath(subDir != null ? subDir : "");
+        Path targetDir = uploadDir.resolve(cleanSubDir).normalize();
+        if (!targetDir.startsWith(this.uploadDir)) {
+            throw new BadRequestException("Security Violation: Cannot store file outside upload directory");
+        }
+
         String originalName = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "file");
         String extension = "";
         int dotIndex = originalName.lastIndexOf('.');
-        if (dotIndex > 0) extension = originalName.substring(dotIndex);
+        if (dotIndex > 0) extension = originalName.substring(dotIndex).toLowerCase();
         String fileName = UUID.randomUUID() + extension;
 
         try {
-            Path targetDir = uploadDir.resolve(subDir);
             Files.createDirectories(targetDir);
-            Path targetPath = targetDir.resolve(fileName);
+            Path targetPath = targetDir.resolve(fileName).normalize();
+            if (!targetPath.startsWith(this.uploadDir)) {
+                throw new BadRequestException("Security Violation: Target path is invalid");
+            }
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-            return subDir + "/" + fileName;
+            return (cleanSubDir.isBlank() ? "" : cleanSubDir + "/") + fileName;
         } catch (IOException e) {
             throw new BadRequestException("Failed to store file: " + originalName);
         }
     }
 
     public Resource loadFile(String filePath) {
+        if (filePath == null || filePath.isBlank()) {
+            throw new BadRequestException("File path is required");
+        }
         try {
             Path path = uploadDir.resolve(filePath).normalize();
+            if (!path.startsWith(this.uploadDir)) {
+                throw new BadRequestException("Security Violation: Path traversal attempt detected");
+            }
             Resource resource = new UrlResource(path.toUri());
-            if (resource.exists()) return resource;
-            throw new BadRequestException("File not found: " + filePath);
+            if (resource.exists() && resource.isReadable()) return resource;
+            throw new BadRequestException("File not found or not readable: " + filePath);
         } catch (MalformedURLException e) {
             throw new BadRequestException("File not found: " + filePath);
         }
