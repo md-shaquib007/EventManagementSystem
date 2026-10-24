@@ -135,7 +135,8 @@ public class EventService {
     public EventResponse approve(Long id, ApprovalRequest request) {
         Event event = findEvent(id);
         event.setStatus(EventStatus.APPROVED);
-        event.setApprovalComment(request.getComment());
+        String comment = (request != null && request.getComment() != null) ? request.getComment() : null;
+        event.setApprovalComment(comment);
         if (event.getBudget() != null) {
             event.getBudget().setApprovedAmount(event.getBudget().getEstimatedAmount());
             event.getBudget().setApproved(true);
@@ -145,7 +146,7 @@ public class EventService {
         notificationService.send(event.getOrganizer(), "Event Approved",
                 "Your event '" + event.getTitle() + "' has been approved.",
                 NotificationType.EVENT_APPROVED, id);
-        auditService.log(securityUtils.getCurrentUser(), "EVENT_APPROVED", "Event", id, null, null);
+        auditService.log(securityUtils.getCurrentUser(), "EVENT_APPROVED", "Event", id, null, comment);
         return eventMapper.toResponse(event);
     }
 
@@ -153,12 +154,13 @@ public class EventService {
     public EventResponse reject(Long id, ApprovalRequest request) {
         Event event = findEvent(id);
         event.setStatus(EventStatus.REJECTED);
-        event.setApprovalComment(request.getComment());
+        String comment = (request != null && request.getComment() != null) ? request.getComment() : "No comment provided";
+        event.setApprovalComment(comment);
         eventRepository.save(event);
         notificationService.send(event.getOrganizer(), "Event Rejected",
-                "Your event '" + event.getTitle() + "' was rejected. Comment: " + request.getComment(),
+                "Your event '" + event.getTitle() + "' was rejected. Comment: " + comment,
                 NotificationType.EVENT_REJECTED, id);
-        auditService.log(securityUtils.getCurrentUser(), "EVENT_REJECTED", "Event", id, null, request.getComment());
+        auditService.log(securityUtils.getCurrentUser(), "EVENT_REJECTED", "Event", id, null, comment);
         return eventMapper.toResponse(event);
     }
 

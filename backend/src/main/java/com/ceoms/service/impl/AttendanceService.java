@@ -6,6 +6,7 @@ import com.ceoms.entity.Event;
 import com.ceoms.entity.User;
 import com.ceoms.entity.enums.AttendanceType;
 import com.ceoms.entity.enums.CheckInMethod;
+import com.ceoms.exception.BadRequestException;
 import com.ceoms.exception.ResourceNotFoundException;
 import com.ceoms.repository.AttendanceRepository;
 import com.ceoms.repository.EventRepository;
@@ -40,6 +41,11 @@ public class AttendanceService {
         } else {
             attendee = securityUtils.getCurrentUser();
         }
+
+        if (attendee != null && attendanceRepository.findByEventIdAndUserId(eventId, attendee.getId()).isPresent()) {
+            throw new BadRequestException("Attendance already marked for this user");
+        }
+
         Attendance attendance = Attendance.builder()
                 .event(event)
                 .user(attendee)

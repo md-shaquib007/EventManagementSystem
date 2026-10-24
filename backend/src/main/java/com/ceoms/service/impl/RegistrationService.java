@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,10 +32,26 @@ public class RegistrationService {
         User user = securityUtils.getCurrentUser();
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-        if (registrationRepository.findByEventIdAndUserId(eventId, user.getId()).isPresent()) {
-            throw new BadRequestException("Already registered for this event");
+
+        Optional<Registration> existing = registrationRepository.findByEventIdAndUserId(eventId, user.getId());
+        if (existing.isPresent()) {
+            Registration reg = existing.get();
+            if (reg.getStatus() == RegistrationStatus.REGISTERED) {
+                throw new BadRequestException("Already registered for this event");
+            }
+            long count = registrationRepository.countByEventIdAndStatus(eventId, RegistrationStatus.REGISTERED);
+            if (count >= event.getCapacity()) {
+                throw new BadRequestException("Event is at full capacity");
+            }
+            reg.setStatus(RegistrationStatus.REGISTERED);
+            reg = registrationRepository.save(reg);
+            notificationService.send(user, "Registration Confirmed",
+                    "You are registered for " + event.getTitle(), NotificationType.REGISTRATION_CONFIRMED, eventId);
+            auditService.log(user, "EVENT_REGISTERED", "Registration", reg.getId(), null, event.getTitle());
+            return reg;
         }
-        long count = registrationRepository.countByEventId(eventId);
+
+        long count = registrationRepository.countByEventIdAndStatus(eventId, RegistrationStatus.REGISTERED);
         if (count >= event.getCapacity()) {
             throw new BadRequestException("Event is at full capacity");
         }
