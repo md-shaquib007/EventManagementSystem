@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -111,6 +112,16 @@ public class EventController {
     @PreAuthorize("hasAnyRole('OPERATOR', 'SUPER_ADMIN')")
     public ApiResponse<EventResponse> uploadBanner(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         return ApiResponse.success("Banner uploaded", eventService.uploadBanner(id, file));
+    }
+
+    @GetMapping("/{id}/calendar")
+    @Operation(summary = "Export event to iCalendar (.ics)")
+    public ResponseEntity<String> exportCalendar(@PathVariable Long id) {
+        String ics = eventService.generateIcsCalendar(id);
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/calendar; charset=utf-8")
+                .header("Content-Disposition", "attachment; filename=\"event-" + id + ".ics\"")
+                .body(ics);
     }
 
     @GetMapping("/search")

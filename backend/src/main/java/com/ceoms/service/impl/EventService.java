@@ -83,6 +83,9 @@ public class EventService {
 
     @Transactional
     public EventResponse create(EventRequest request) {
+        if (request.getVenueId() != null && request.getStartDate() != null) {
+            checkVenueAvailability(request.getVenueId(), request.getStartDate(), request.getEndDate() != null ? request.getEndDate() : request.getStartDate(), null);
+        }
         User organizer = securityUtils.getCurrentUser();
         Event event = mapRequestToEvent(new Event(), request);
         event.setEventCode(CodeGenerator.generateEventCode());
@@ -107,6 +110,9 @@ public class EventService {
         validateEventOwnership(event);
         if (event.getStatus() != EventStatus.DRAFT && event.getStatus() != EventStatus.REJECTED) {
             throw new BadRequestException("Only draft or rejected events can be edited");
+        }
+        if (request.getVenueId() != null && request.getStartDate() != null) {
+            checkVenueAvailability(request.getVenueId(), request.getStartDate(), request.getEndDate() != null ? request.getEndDate() : request.getStartDate(), id);
         }
         mapRequestToEvent(event, request);
         event = eventRepository.save(event);
@@ -238,6 +244,39 @@ public class EventService {
         if (!isAdmin && !event.getOrganizer().getId().equals(current.getId())) {
             throw new ForbiddenException("You can only manage your own events");
         }
+    }
+
+    private void checkVenueAvailability(Long venueId, LocalDate startDate, LocalDate endDate, Long excludeId) {
+        List<Event> conflicts = eventRepository.findVenueConflicts(venueId, startDate, endDate, excludeId);
+        if (!conflicts.isEmpty()) {
+            Event conflict = conflicts.get(0);
+            throw new BadRequestException("Venue conflict: Venue is already booked for '" +
+                    conflict.getTitle() + "' from " + conflict.getStartDate() + " to " + conflict.getEndDate());
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public String generateIcsCalendar(Long id) {
+        Event event = findEvent(id);
+        String startDt = event.getStartDate().toString().replace("-", "") + "T" +
+                (event.getStartTime() != null ? event.getStartTime().toString().replace(":", "") + "00" : "090000");
+        String endDt = (event.getEndDate() != null ? event.getEndDate().toString().replace("-", "") : event.getStartDate().toString().replace("-", "")) + "T" +
+                (event.getEndTime() != null ? event.getEndTime().toString().replace(":", "") + "00" : "170000");
+        String venueName = event.getVenue() != null ? event.getVenue().getName() : "Campus";
+
+        return "BEGIN:VCALENDAR\r\n" +
+                "VERSION:2.0\r\n" +
+                "PRODID:-//CEOMS//College Event Operations//EN\r\n" +
+                "BEGIN:VEVENT\r\n" +
+                "UID:" + event.getEventCode() + "@ceoms.college.edu\r\n" +
+                "SUMMARY:" + event.getTitle() + "\r\n" +
+                "DESCRIPTION:" + (event.getDescription() != null ? event.getDescription().replace("\n", " ") : "") + "\r\n" +
+                "LOCATION:" + venueName + "\r\n" +
+                "DTSTART:" + startDt + "\r\n" +
+                "DTEND:" + endDt + "\r\n" +
+                "STATUS:CONFIRMED\r\n" +
+                "END:VEVENT\r\n" +
+                "END:VCALENDAR\r\n";
     }
 
     private Event mapRequestToEvent(Event event, EventRequest request) {
