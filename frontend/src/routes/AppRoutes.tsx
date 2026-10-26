@@ -4,6 +4,8 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import DashboardPage from '../pages/DashboardPage';
 import EventsPage from '../pages/EventsPage';
+import EventDetailPage from '../pages/EventDetailPage';
+import CreateEventPage from '../pages/CreateEventPage';
 import PlaceholderPage from '../pages/PlaceholderPage';
 
 export default function AppRoutes() {
@@ -14,8 +16,8 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/events" element={<EventsPage />} />
-        <Route path="/events/:id" element={<PlaceholderPage title="Event Details" />} />
-        <Route path="/events/new" element={<PlaceholderPage title="Create Event" />} />
+        <Route path="/events/:id" element={<EventDetailPage />} />
+        <Route path="/events/new" element={<CreateEventPage />} />
         <Route path="/departments" element={<PlaceholderPage title="Departments" />} />
         <Route path="/bills" element={<PlaceholderPage title="Bills & Expenses" />} />
         <Route path="/attendance" element={<PlaceholderPage title="Attendance" />} />
